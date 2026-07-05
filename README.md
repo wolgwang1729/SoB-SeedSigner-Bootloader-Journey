@@ -22,7 +22,6 @@ This project implements a **Hybrid Architecture** to meet SeedSigner's strict se
 The R&D process is thoroughly documented and divided into chronological phases:
 
 * **[`LiteratureReview.MD`](./LiteratureReview.MD):** A detailed analysis of the Specter-DIY bootloader, ESP-IDF internals, and Kern architecture.
-* **[`MidtermEvaluation.md`](./MidtermEvaluation.md):** Summary of the project's status, challenges overcome, and future milestones for the mid-point of the Summer of Bitcoin program.
 
 ### Phases
 * **[Phase 1: Minimal Secure Boot Prototype](./Phase_1/Phase_1_Prototype.md)**
@@ -33,8 +32,10 @@ The R&D process is thoroughly documented and divided into chronological phases:
   Merging Layer 1 (Secure Boot v2) and Layer 2 (App-Based Loader) into a complete, emulated end-to-end boot flow.
 * **[Phase 4: Loading SeedSigner Firmware](./Phase_4/Phase_4_Loading_SeedSigner_Firmware.md)**
   Adapting the bootloader pipeline to load the actual MicroPython payload. Covers deep architectural fixes for IRAM/DRAM access violations, hidden MMU misalignments, and stack self-overwrite bugs.
-* **[Phase 5: Environment Upgrade & MicroPython Execution](./Phase_5/Phase_5_Summary.md)**
+* **[Phase 5: Environment Upgrade & MicroPython Execution](./Phase_5/Phase_5_Environment_Upgrade_and_MicroPython_Execution.md)**
   Upgrading to ESP-IDF v6.0.1 and successfully booting the official MicroPython build for the ESP32-S3 via the stateless Secure Loader.
+* **[Phase 6: UI Emulation & Validation via Wokwi](./Phase_6/Phase_6_UI_Emulation_and_Validation_via_Wokwi.md)**
+  Visually verifying the SeedSigner UI using Wokwi’s virtual hardware emulation. Resolving PSRAM mismatch, bypassing bootloader limitations, and executing the raw MicroPython OS to a fully interactive REPL prompt on the ESP32-S3 architecture.
 
 ## Testing & Emulation
 

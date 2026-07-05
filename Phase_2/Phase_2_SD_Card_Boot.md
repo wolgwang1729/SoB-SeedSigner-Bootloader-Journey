@@ -1,8 +1,8 @@
 # Phase 2: SD Card Boot Verification & Stateless Execution
 
-**Date:** June 21, 2026
-**Author:** Mayank (wolgwang)
-**Project:** SeedSigner Secure Boot — Summer of Bitcoin
+- **Date:** June 21, 2026
+- **Author:** Mayank (wolgwang)
+- **Project:** SeedSigner Secure Boot — Summer of Bitcoin
 
 ## 1. Summary
 This document outlines the architecture and working prototype for the SeedSigner-specific secure boot flow on the ESP32-S3 (Phase 2). To maintain SeedSigner's core "stateless" philosophy, no application firmware is ever written to internal flash.
@@ -165,7 +165,7 @@ flowchart TD
 | :--- | :--- | :--- |
 | **Storage / Payload Location** | Permanently burned into the physical internal flash. | Exists on a removable SD card; copied to volatile PSRAM buffer during boot. |
 | **Cryptography** | Standard enterprise algorithms (RSA-3072 / RSA-4096). | Bitcoin-native curve (`secp256k1`) in a multisignature arrangement. |
-| **Verification Chain** | ROM ➡️ Bootloader (RSA) ➡️ App in Flash (RSA) | ROM ➡️ Bootloader (RSA) ➡️ App-Based Loader (RSA) ➡️ **Mount SD & Verify Payload (secp256k1)** |
+| **Verification Chain** | ROM -> Bootloader (RSA) -> App in Flash (RSA) | ROM -> Bootloader (RSA) -> App-Based Loader (RSA) -> **Mount SD & Verify Payload (secp256k1)** |
 | **Memory Management** | Hardware automatically streams instructions from internal flash to CPU. | **MMU Hijack**: Rewrites Cache MMU tables to route instruction fetches from the PSRAM buffer. |
 | **Statefulness** | **Stateful**: Firmware remains in flash when powered off. | **Stateless**: The device leaves no trace when powered off (PSRAM is volatile). |
 

@@ -1,25 +1,23 @@
-# Secure Boot Quickstart (QEMU Emulation)
+# Phase 1: Prototype (Minimal Secure Boot on ESP32)
 
-**Date:** June 15, 2026
-**Author:** Mayank (wolgwang)
-**Phase:** 1 (Prototype: Minimal Secure Boot on ESP32)
+- **Date:** June 15, 2026
+- **Author:** Mayank (wolgwang)
+- **Project:** SeedSigner Secure Boot — Summer of Bitcoin
 
 ## Overview
 As discussed with Keith, I will eventually need to perform lots of hands-on testing across various physical ESP32 dev boards. However, since I currently do not have physical boards on hand and am waiting to resolve logistics (e.g., sourcing/budget) while Keith is away, this guide documents the process of setting up ESP-IDF and enabling **Secure Boot v2** using the official ESP32 QEMU emulator.
 
 Using an emulator is highly recommended for initial secure boot testing because burning eFuses on real hardware is an irreversible action. A mistake on a real dev board would permanently brick it.
 
-> **Important Discovery for QEMU:** The default `esp32` QEMU machine emulates chip revision 0. Secure Boot v2 on the classic ESP32 physically requires chip revision 3 (ECO3). Instead of trying to force QEMU to emulate an ECO3 ESP32, **I target `esp32s3`** which natively supports Secure Boot v2 from its base revision.
+> **Crucial Discovery for QEMU:** The default `esp32` QEMU machine emulates chip revision 0. Secure Boot v2 on the classic ESP32 physically requires chip revision 3 (ECO3). Instead of trying to force QEMU to emulate an ECO3 ESP32, **I target `esp32s3`** which natively supports Secure Boot v2 from its base revision.
 
 ## 1. Development Environment Setup
 
 ### 1.1. Installing ESP-IDF
 
-I maintain two versions of the ESP-IDF toolchain for specific testing purposes:
-1. **v5.2 (Default):** Used for standard CLI/UART-based Secure Boot tests. This is my stable baseline.
-2. **v5.3 (Graphical Simulation):** Required strictly if you want to use the `espressif/esp_lcd_qemu_rgb` component to simulate a graphical LCD screen in QEMU (e.g., for testing LVGL user interfaces).
+I use the ESP-IDF toolchain (v5.2) for standard CLI/UART-based Secure Boot tests. This is my stable baseline.
 
-**To install v5.2 (Default):**
+**To install ESP-IDF (v5.2):**
 ```bash
 mkdir -p ~/esp
 cd ~/esp
@@ -181,7 +179,7 @@ To test this safely without a physical board, you can append the `--virt` flag t
 espefuse.py --chip esp32s3 --virt burn_efuse SECURE_BOOT_KEY_REVOKE0
 ```
 
-**This is the actual output captured from running the command in our virtual environment:**
+**This is the actual output captured from running the command in my virtual environment:**
 ```
 espefuse.py v4.11.0
 

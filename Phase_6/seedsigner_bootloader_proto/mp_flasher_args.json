@@ -1,0 +1,16 @@
+{
+    "write_flash_args" : [ "--flash_mode", "dio",
+                           "--flash_size", "8MB",
+                           "--flash_freq", "80m" ],
+    "flash_settings" : {
+        "flash_mode": "dio",
+        "flash_size": "8MB",
+        "flash_freq": "80m"
+    },
+    "flash_files" : {
+        "0x0" : "build/bootloader/bootloader.bin",
+        "0x10000" : "micropython.bin",
+        "0x8000" : "mp_partitions.bin",
+        "0x310000" : "mp_storage.bin"
+    }
+}

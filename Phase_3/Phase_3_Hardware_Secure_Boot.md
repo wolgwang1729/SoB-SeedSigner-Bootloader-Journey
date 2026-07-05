@@ -1,8 +1,8 @@
 # Phase 3: Hardware Secure Boot Integration (Emulated)
 
-**Date:** June 28, 2026
-**Author:** Mayank (wolgwang)
-**Project:** SeedSigner Secure Boot — Summer of Bitcoin
+- **Date:** June 28, 2026
+- **Author:** Mayank (wolgwang)
+- **Project:** SeedSigner Secure Boot — Summer of Bitcoin
 
 ## 1. Summary
 This document summarizes the completion of Phase 3, which successfully proves the **Hybrid Architecture** (Option D) end-to-end. I have successfully merged the Layer 1 hardware Root of Trust (ESP-IDF Secure Boot v2) from Phase 1 with the Layer 2 App-Based stateless SD card loader from Phase 2.
@@ -64,14 +64,14 @@ I (381) secure_boot_v2: Secure boot permanently enabled
 ```
 
 ### Boot 2: Hardware Root of Trust
-Because eFuses were burned, the device immediately restarted itself. On the second boot, the ROM read the eFuse, cryptographically validated our custom App-Based loader, and handed off execution:
+Because eFuses were burned, the device immediately restarted itself. On the second boot, the ROM read the eFuse, cryptographically validated my custom App-Based loader, and handed off execution:
 ```text
 Valid secure boot key blocks: 0
 secure boot verification succeeded
 ```
 
 ### Boot 3: The Stateless App Loader
-Once our `seedsigner_bootloader_proto` took over, it mounted the FAT partition (representing the SD card), pulled the payload (`seed.bin`), mapped the Cache MMU to PSRAM, and executed the payload without flashing it:
+Once my `seedsigner_bootloader_proto` took over, it mounted the FAT partition (representing the SD card), pulled the payload (`seed.bin`), mapped the Cache MMU to PSRAM, and executed the payload without flashing it:
 ```text
 I (8172) SEEDSIGNER_LOADER: Starting SeedSigner Secure Loader (App Mode)
 I (8172) SEEDSIGNER_LOADER: Initializing FAT on SPI Flash for QEMU testing...
@@ -95,13 +95,11 @@ To fully validate Layer 2 (the App-Based Loader), I integrated the Specter Bootl
 2. **Signing**: The script utilizes a dummy `secp256k1` key (derived from a simple exponent) to calculate a deterministic signature over a bech32-encoded SHA-256 hash of the main section.
 3. **Verification**: I configured the `seedsigner_bootloader_proto` with the corresponding dummy public key in `vendor_keys`. During the boot sequence, the loader parses the FAT filesystem to find `seed.bin`, validates the main section header, and then mathematically verifies the `secp256k1` signature appended at the end of the file before permitting memory mapping and execution.
 
-This successfully proves that our stateless loader can robustly verify cryptographic signatures on the fly before jumping to arbitrary payloads.
+This successfully proves that my stateless loader can robustly verify cryptographic signatures on the fly before jumping to arbitrary payloads.
 
 ## 6. Conclusion & Next Steps
 
-This conclusively proves the SeedSigner Hybrid Secure Boot architecture. The ESP32 hardware root of trust natively protects our custom 3rd-stage loader, which in turn statelessly protects the application firmware.
-
-The next step (Phase 4) is to adapt this pipeline to boot the actual `seedsigner.bin` firmware instead of the `hello_world.bin` placeholder, validating the UI and standard SeedSigner operations from PSRAM.
+This conclusively proves the SeedSigner Hybrid Secure Boot architecture. The ESP32 hardware root of trust natively protects my custom 3rd-stage loader, which in turn statelessly protects the application firmware.
 
 ## 7. QEMU eFuse Persistence (Experiment)
 

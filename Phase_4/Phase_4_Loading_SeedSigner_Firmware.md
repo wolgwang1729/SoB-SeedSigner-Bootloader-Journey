@@ -1,8 +1,8 @@
 # Phase 4: Loading SeedSigner Firmware (QEMU Emulation)
 
-**Date:** June 28, 2026
-**Author:** Mayank (wolgwang)
-**Project:** SeedSigner Secure Boot — Summer of Bitcoin
+- **Date:** June 28, 2026
+- **Author:** Mayank (wolgwang)
+- **Project:** SeedSigner Secure Boot — Summer of Bitcoin
 
 ## 1. Summary
 This document summarizes the completion of Phase 4, which focused on adapting the Secure Bootloader pipeline (proven in Phase 3) to statelessly boot the actual `seedsigner.bin` (MicroPython) payload inside the QEMU emulator. 
@@ -80,7 +80,7 @@ The `build_qemu.sh` build script was upgraded with a Python script to dynamicall
 While the `do_mmu_mapping_and_jump` function was moved to RTC memory to prevent overwriting active instructions, the CPU's active `app_main` FreeRTOS stack was still located in internal DRAM. When the loader looped through the payload's RAM segments and used `memcpy` to write Segment 4 to its target destination (`0x3FC8C5D4` to `0x3FCA3F08`), it literally overwrote the active stack the CPU was currently using to execute the `memcpy`! This caused the processor to corrupt its own local variables mid-copy, resulting in an immediate silent hang or UART garbage output (`0 ! ! !`).
 
 **Fix:**
-A much safer stack manipulation architecture was implemented:
+A bulletproof stack manipulation architecture was implemented:
 1. All critical copy states were moved into `RTC_DATA_ATTR` global variables, which reside in safe RTC memory outside the payload's DRAM footprint.
 2. The flash payload segments were temporarily buffered into a guaranteed safe high-DRAM zone (`0x3FCC0000`) while the OS was still alive in `app_main`.
 3. Inline assembly was injected right at the start of the jump function (`asm volatile ("movi a1, 0x3FCE9000\n");`) to proactively pivot the CPU's stack pointer into a safe, unallocated high DRAM region *before* executing the final memory overwrites.
@@ -105,7 +105,5 @@ Aborted                 (core dumped) qemu-system-xtensa ...
 **Conclusion:**
 This verified that Phase 4 was a complete success. The secure loader perfectly mapped the memory, safely pivoted the stack, and booted the MicroPython payload. The crash was a verified bug in QEMU's experimental hardware emulation of the ESP32-S3's cryptographic DMA engines, which MicroPython attempted to initialize upon waking up.
 
-## 10. Conclusion & Next Steps
-This concludes Phase 4. I successfully developed a hardened ESP32-S3 Secure Loader that is capable of verifying, mapping, and jumping to a MicroPython payload statelessly in a strict execution environment. 
-
-The next step (Phase 5) is to perform the physical integration with SD cards. I will implement and test the final verification layer to ensure SD card payload image integrity and validate the Hybrid Secure Boot sequence on actual hardware hardware.
+## 10. Conclusion
+This concludes Phase 4. I successfully developed a hardened ESP32-S3 Secure Loader that is capable of verifying, mapping, and jumping to a MicroPython payload statelessly in a strict execution environment.

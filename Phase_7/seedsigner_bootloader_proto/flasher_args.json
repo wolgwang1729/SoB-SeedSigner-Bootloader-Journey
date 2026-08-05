@@ -1,0 +1,14 @@
+{
+  "flash_settings": {
+    "flash_mode": "dio",
+    "flash_size": "8MB",
+    "flash_freq": "80m"
+  },
+  "flash_files": {
+    "0x0": "build/bootloader/bootloader.bin",
+    "0x20000": "build/partition_table/partition-table.bin",
+    "0x30000": "build/seedsigner_secure_loader.bin",
+    "0x130000": "build/storage.bin",
+    "0x33FF00": "dummy_fat_dir/seed.bin"
+  }
+}

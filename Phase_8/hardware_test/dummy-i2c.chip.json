@@ -1,0 +1,13 @@
+{
+  "name": "dummy-i2c",
+  "author": "wolgwang",
+  "version": "1.0.0",
+  "pins": {
+    "SDA": {
+      "description": "I2C Data"
+    },
+    "SCL": {
+      "description": "I2C Clock"
+    }
+  }
+}

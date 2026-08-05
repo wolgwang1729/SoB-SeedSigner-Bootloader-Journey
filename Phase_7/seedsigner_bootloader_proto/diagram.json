@@ -1,0 +1,213 @@
+{
+  "version": 1,
+  "author": "Wolgwang",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "board-esp32-s3-devkitc-1",
+      "id": "esp",
+      "top": 0,
+      "left": 0,
+      "attrs": {
+        "flashSize": "8",
+        "psramSize": "8",
+        "psramType": "octal"
+      }
+    },
+    {
+      "type": "wokwi-ili9341",
+      "id": "lcd",
+      "top": -40,
+      "left": 250,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-custom-dummy-i2c",
+      "id": "dummy_0",
+      "top": 0,
+      "left": 0
+    },
+    {
+      "type": "wokwi-custom-dummy-i2c",
+      "id": "dummy_1",
+      "top": 0,
+      "left": 0
+    },
+    {
+      "type": "wokwi-custom-dummy-i2c",
+      "id": "dummy_2",
+      "top": 0,
+      "left": 0
+    },
+    {
+      "type": "wokwi-custom-dummy-i2c",
+      "id": "dummy_3",
+      "top": 0,
+      "left": 0
+    },
+    {
+      "type": "wokwi-custom-dummy-i2c",
+      "id": "dummy_4",
+      "top": 0,
+      "left": 0
+    },
+    {
+      "type": "wokwi-custom-dummy-i2c",
+      "id": "dummy_5",
+      "top": 0,
+      "left": 0
+    },
+    {
+      "type": "wokwi-custom-dummy-i2c",
+      "id": "dummy_6",
+      "top": 0,
+      "left": 0
+    }
+  ],
+  "connections": [
+    [
+      "esp:GND.1",
+      "lcd:GND",
+      "black",
+      []
+    ],
+    [
+      "esp:3V3.1",
+      "lcd:VCC",
+      "red",
+      []
+    ],
+    [
+      "esp:18",
+      "lcd:RESET",
+      "red",
+      []
+    ],
+    [
+      "esp:3V3.2",
+      "lcd:LED",
+      "red",
+      []
+    ],
+    [
+      "esp:19",
+      "lcd:CS",
+      "blue",
+      []
+    ],
+    [
+      "esp:17",
+      "lcd:D/C",
+      "green",
+      []
+    ],
+    [
+      "esp:13",
+      "lcd:MOSI",
+      "orange",
+      []
+    ],
+    [
+      "esp:14",
+      "lcd:SCK",
+      "yellow",
+      []
+    ],
+    [
+      "esp:TX",
+      "$serialMonitor:RX",
+      "",
+      []
+    ],
+    [
+      "esp:RX",
+      "$serialMonitor:TX",
+      "",
+      []
+    ],
+    [
+      "esp:21",
+      "dummy_0:SDA",
+      "",
+      []
+    ],
+    [
+      "esp:22",
+      "dummy_0:SCL",
+      "",
+      []
+    ],
+    [
+      "esp:22",
+      "dummy_1:SDA",
+      "",
+      []
+    ],
+    [
+      "esp:21",
+      "dummy_1:SCL",
+      "",
+      []
+    ],
+    [
+      "esp:8",
+      "dummy_2:SDA",
+      "",
+      []
+    ],
+    [
+      "esp:9",
+      "dummy_2:SCL",
+      "",
+      []
+    ],
+    [
+      "esp:8",
+      "dummy_3:SDA",
+      "",
+      []
+    ],
+    [
+      "esp:7",
+      "dummy_3:SCL",
+      "",
+      []
+    ],
+    [
+      "esp:15",
+      "dummy_4:SDA",
+      "",
+      []
+    ],
+    [
+      "esp:10",
+      "dummy_4:SCL",
+      "",
+      []
+    ],
+    [
+      "esp:4",
+      "dummy_5:SDA",
+      "",
+      []
+    ],
+    [
+      "esp:5",
+      "dummy_5:SCL",
+      "",
+      []
+    ],
+    [
+      "esp:6",
+      "dummy_6:SDA",
+      "",
+      []
+    ],
+    [
+      "esp:7",
+      "dummy_6:SCL",
+      "",
+      []
+    ]
+  ]
+}

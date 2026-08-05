@@ -11,12 +11,13 @@ There is still substantial R&D work ahead for the SeedSigner MicroPython port fo
 # Literature Review
 
 ## Summary
-This document reviews and compares the bootloader designs and security implementations of **Specter-DIY** and **Kern**. While Specter-DIY uses a stateful approach for code but operates statelessly regarding secrets via an SD card boot process, Kern opts for a fully stateful model with direct execution from internal flash, heavily relying on ESP32-P4 eFuses for security. Currently, Kern's implementation lacks the cryptographic verification present in Specter-DIY, leaving it vulnerable to physical attacks. Note that Kern's secure boot implementation is still in the planning phase, awaiting stabilization of ESP-IDF APIs (particularly for anti-tamper keys).
+This document reviews and compares the bootloader designs and security implementations of **Specter-DIY** and **Kern**. While Specter-DIY uses a stateful approach for code but operates statelessly regarding secrets via an SD card boot process, Kern opts for a fully stateful model with direct execution from internal flash, heavily relying on ESP32-P4 eFuses for security. As of v0.0.15 (July 2026), Kern has implemented Phases 0–4 of its security roadmap: anti-phishing via eFuse HMAC, NVS encryption, and air-gapped SD card firmware updates with **RSA-3072** signature verification. The secure boot scheme pivoted from ECDSA-P256 to **RSA-3072 (RSA-PSS)** because ECDSA Secure Boot v2 is non-functional on ESP32-P4 silicon (chip errata). Boot-time eFuse enforcement (Phase 6) and flash encryption (Phase 5, blocked on IDF ≥ 6.1) remain ahead — an unsigned app still boots, and signature verification is currently enforced only on the OTA update path.
 
 ## Table of Contents
 - [Summary](#executive-summary)
 - [Specter-DIY](#specter-diy)
 - [ESP IDF](#esp-idf)
+- [Kern](#kern-githubcomodudexkern)
 - [Comparison Between Kern and Specter-DIY](#comparison-between-kern-and-specter-diy)
 - [Bootloader Related Things in SeedSigner MicroPython Builder](#bootloader-related-things-in-seedsigner-micropython-builder)
 
@@ -957,6 +958,9 @@ The Secure Boot v2 process follows these steps:
 6. The bootloader verifies the application image using the raw image data, its corresponding signature blocks, and the eFuse, see [Verifying an Image](https://docs.espressif.com/projects/esp-idf/en/stable/esp32/security/secure-boot-v2.html#verify-image). If this fails, the boot process will be aborted. If the verification fails but another application image is found, the bootloader will then try to verify that other image using steps 5 to 7. This repeats until a valid image is found or no other images are found.
 7. The bootloader executes the verified application image.
 ## What's planned? Secure Boot process from [github.com/odudex/Kern/blob/master/docs/secure-boot.md](https://github.com/odudex/Kern/blob/master/docs/secure-boot.md)
+
+> **Note (August 2026):** The original plan described ECDSA-P256. Kern has since pivoted to **RSA-3072 (RSA-PSS)** because ECDSA-based Secure Boot v2 is non-functional on ESP32-P4 silicon (chip errata — enabling it would require `CONFIG_SECURE_BOOT_INSECURE`). RSA-3072 is also the faster verifier on P4 (~14.8 ms vs ~61.1 ms for ECDSA-P256, via the hardware RSA/MPI accelerator). The diagrams below reflect the updated algorithm.
+
 ## 1. How Secure Boot v2 Works
 
 **Secure Boot v2 Cryptographic Verification Sequence:**
@@ -974,7 +978,7 @@ sequenceDiagram
     Note over ROM: Verify 2nd Stage Bootloader
     ROM->>ROM: Hash Bootloader Image (SHA-256)
     ROM->>ROM: Read Signature Block
-    ROM->>ROM: Verify ECDSA-P256 Signature
+    ROM->>ROM: Verify RSA-3072 (RSA-PSS) Signature
     ROM->>eFuse: Verify Public Key Digest
     eFuse-->>ROM: Key Digest Matches (Not Revoked)
     
@@ -987,7 +991,7 @@ sequenceDiagram
     Note over BL: Verify Application Image
     BL->>BL: Hash App Image (SHA-256)
     BL->>BL: Read Signature Block
-    BL->>BL: Verify ECDSA-P256 Signature
+    BL->>BL: Verify RSA-3072 (RSA-PSS) Signature
     BL->>eFuse: Verify Public Key Digest
     eFuse-->>BL: Key Digest Matches (Not Revoked)
 
@@ -1005,7 +1009,7 @@ Firmware image (all code + data)
     ▼  SHA-256
 Image hash (32 bytes)
     │
-    ▼  ECDSA-P256 sign with private key
+    ▼  RSA-3072 (RSA-PSS) sign with private key
 Signature block (appended to image):
     ├── Public key
     └── Signature over image hash
@@ -1016,8 +1020,8 @@ The signature covers the SHA-256 hash of the **entire image content** — header
 On every boot the ROM bootloader performs these steps for both the second-stage bootloader and the application image (each verified independently):
 
 1. **Hash the full image** — compute SHA-256 over the entire image content (everything except the appended signature block).
-2. **Read the signature block** — extract the public key and ECDSA signature appended to the image.
-3. **Verify the signature** — use the public key to verify the ECDSA signature against the image hash from step 1. This proves the image is unmodified since signing.
+2. **Read the signature block** — extract the public key and RSA-3072 signature appended to the image.
+3. **Verify the signature** — use the public key to verify the RSA-PSS signature against the image hash from step 1. This proves the image is unmodified since signing.
 4. **Verify the public key** — compute SHA-256 of the public key and compare against the digest(s) stored in eFuse key blocks. This proves the signature came from a trusted key.
 5. If both checks pass, execution proceeds. Otherwise the chip refuses to boot.
 This two-step verification prevents forgery: even if an attacker replaces the signature block with their own key and signature, step 4 will fail because their public key's digest won't match any eFuse slot.
@@ -1025,13 +1029,18 @@ This two-step verification prevents forgery: even if an attacker replaces the si
 Both the second-stage bootloader and the application image are verified independently — each carries its own signature.
 
 ### Digest Slots
-The ESP32-P4 provides multiple eFuse key blocks. Kern allocates two for secure boot:
+The ESP32-P4 provides multiple eFuse key blocks. Kern allocates **all six** blocks and all three Secure Boot v2 digest slots, enabling **two key rotations** and leaving no free digest slot for an attacker to inject a rogue signing key:
 
-| <u>eFuse Block</u> | <u>Purpose</u> | <u>Notes</u> |
-| ----- | ----- | ----- |
-| KEY0 (BLOCK_KEY0) | Secure Boot Digest 0 — primary signing key | Day-to-day firmware signing |
-| KEY1 (BLOCK_KEY1) | Secure Boot Digest 1 — backup/rotation key | Key rotation or hybrid scenario |
-KEY2–KEY3 are reserved for flash encryption (Phase 5). KEY4–KEY5 are reserved for HMAC (Phases 2, 6).
+| eFuse Block | Purpose | Phase | Status |
+|-------------|---------|-------|--------|
+| KEY0 (BLOCK_KEY0) | Secure Boot Digest 0 — primary signing key | 6 | Public key/digest in `kern_secure_boot/` (pending first signed release) |
+| KEY1 (BLOCK_KEY1) | Secure Boot Digest 1 — rotation #1 | 6 | Public key/digest in `kern_secure_boot/` (pending first signed release) |
+| KEY2 (BLOCK_KEY2) | Secure Boot Digest 2 — rotation #2 | 6 | Public key/digest in `kern_secure_boot/` (pending first signed release) |
+| KEY3 (BLOCK_KEY3) | Flash-encryption XTS-AES key | 5 | Decided: **XTS-AES-128** (Key Manager path is revision-gated; fielded boards are v1.0/v1.3) |
+| KEY4 (BLOCK_KEY4) | NVS-encryption HMAC (`HMAC_UP`) | 3 | **Implemented** — burned during PIN setup |
+| KEY5 (BLOCK_KEY5) | Anti-phishing HMAC (`HMAC_UP`) | 2 | **Implemented** — burned during first PIN setup |
+
+Key rotation works (per the plan) because the second-stage bootloader would be signed with **all three keys** at initial flash (it is frozen forever — never OTA-updated), while the app is signed with the current primary. **This is documented policy, not what the current tooling does:** `scripts/sign_release.sh` only signs the app image with key0. Revoking a slot (`SECURE_BOOT_KEY_REVOKE0/1/2`) is irreversible; with three slots Kern can absorb up to two independent key compromises/rotations.
 
 ### Revocation
 Each digest slot has a corresponding revocation bit:
@@ -1048,27 +1057,130 @@ Setting the `SECURE_BOOT_EN` eFuse bit permanently enables secure boot. From tha
 - The device can only be updated via signed images (SD card OTA after Phase 4).
 
 
-## What's implemented?
-As of now, the bootloader is currently set up as a standard component of the ESP-IDF build system with no special security features enabled yet.
+## What's implemented? (v0.0.15, July 2026)
+
+Between v0.0.11 (2026-06-16) and v0.0.15 (2026-07-24), most of the security roadmap in `docs/security-plan.md` was implemented and the secure-boot plan was rewritten for **RSA-3072**. The bootloader itself remains the stock ESP-IDF second-stage bootloader — Kern adds no custom bootloader code. All security features live in the application firmware and rely on ESP32-P4 eFuses for hardware binding.
+
+When it boots up normally, the control is given to [github.com/odudex/Kern/blob/master/main/main.c](https://github.com/odudex/Kern/blob/master/main/main.c). The `app_main()` initialization sequence is:
+
+1. **Air-gap enforcement:** `bsp_wifi_coproc_disable()` holds the ESP32-C6 Wi-Fi/BT co-processor in reset (radio never comes up).
+2. **NVS init:** `nvs_secure_init()` — encrypted if eFuse KEY4 is provisioned (`nvs_flash_secure_init()`), plaintext otherwise (`nvs_flash_init_partition()`). **Never** calls stock `nvs_flash_init()` (its keygen path would burn KEY4 without consent).
+3. **Settings init:** `settings_init()` — persistent settings from NVS.
+4. **Display init:** `bsp_display_start()` + early black screen (overwrite stale framebuffer on warm reset).
+5. **Video pipeline init:** `app_video_init_once()` (camera, non-fatal if fails).
+6. **PMIC init:** `bsp_pmic_init()` (AXP2101 on wave_35; no-op on wave_4b).
+7. **Theme + splash:** Animated logo splash screen (3-second delay).
+8. **Crypto init:** `wally_init(0)` + `bip39_filter_init()`.
+9. **PIN module init:** `pin_init()` — opens the PIN NVS namespace.
+10. **Session lock + boot gate:** `session_lock_init()`, then `session_lock_boot_gate()` (PIN entry if configured).
+11. **OTA boot confirm:** `fw_update_boot_confirm()` — confirms a freshly installed update so the bootloader doesn't roll back to the previous slot.
+
+**Code Excerpt (current `app_main()`):**
+
+```c
+void app_main(void) {
+  // Air-gap: hold the Wi-Fi/BT co-processor (ESP32-C6) in reset first.
+  ESP_ERROR_CHECK(bsp_wifi_coproc_disable());
+
+  // Initialize NVS for persistent settings — encrypted if eFuse KEY4 is
+  // provisioned, plaintext otherwise
+  ESP_ERROR_CHECK(nvs_secure_init());
+  settings_init();
+
+  bsp_display_start();
+  ESP_LOGI(TAG, "Display initialized successfully");
+
+  // ... video pipeline init, screen clear, PMIC init, theme, splash ...
+
+  // Initialize Bitcoin crypto library
+  const int wally_res = wally_init(0);
+  if (wally_res != WALLY_OK) { abort(); }
+
+  bip39_filter_init();
+  pin_init();
+  session_lock_init();
+  session_lock_boot_gate(screen);
+
+  // Everything initialized — confirm OTA so bootloader doesn't roll back
+  fw_update_boot_confirm();
+}
+```
+
+### Phase 2 — Split PIN with anti-phishing (eFuse HMAC)
+`esp_hmac_calculate(HMAC_KEY5, ...)` derives device-bound BIP39 words + identicon. Implemented in `main/core/pin.c` with the split-PIN flow, PBKDF2-SHA256 (100,000 iterations) PIN hashing, exponential backoff, and wipe-after-N-failures. KEY5 is burned during first PIN setup and read/write-protected immediately.
+
+### Phase 3 — NVS encryption (HMAC scheme, KEY4)
+Implemented in `main/core/nvs_secure.c`. The XTS-AES-256 keys that encrypt NVS are derived at runtime from eFuse KEY4 via the HMAC peripheral (no `nvs_keys` partition). Provisioning is consent-gated during PIN setup and runs *in session* (no reboot). Note the subtlety in `sdkconfig.defaults`:
+
+```ini
+# The app never calls nvs_flash_init(): its keygen path would burn KEY4 without
+# consent. Boot branches on KEY4 presence in core/nvs_secure.c instead.
+CONFIG_NVS_ENCRYPTION=y
+CONFIG_NVS_SEC_KEY_PROTECT_USING_HMAC=y
+CONFIG_NVS_SEC_HMAC_EFUSE_KEY_ID=4
+```
+
+The boot path is: KEY4 present → `nvs_flash_secure_init(&cfg)` (with plaintext-erase fallback); KEY4 absent → plain `nvs_flash_init_partition()` and never touch the keygen path. Live migration on provisioning: if power is cut mid-migration, next boot's `nvs_secure_init()` finishes it (KEY4 present → erase plaintext → encrypted init).
+
+### Phase 4 — Air-gapped SD card firmware updates with signed-image verification
+Implemented in `main/core/fw_update.c`. This is the closest Kern analogue to Specter-DIY's SD upgrade flow, but it *runs inside the app* using ESP-IDF's OTA API rather than being a custom bootloader:
+
+- Config: `CONFIG_SECURE_SIGNED_APPS_NO_SECURE_BOOT=y` + `CONFIG_SECURE_SIGNED_ON_UPDATE_NO_SECURE_BOOT=y` + `CONFIG_SECURE_SIGNED_APPS_RSA_SCHEME=y` — the OTA path performs full Secure Boot v2 **RSA-3072** signature verification. **No eFuses burned, fully reversible.**
+- **Verified trust anchor:** the key-digest comparison lives inside ESP-IDF's `esp_secure_boot_verify_sbv2_signature_block()`. Under `CONFIG_SECURE_SIGNED_ON_UPDATE_NO_SECURE_BOOT`, the trusted digest set comes from the **running app's own signature block** (`esp_secure_boot_get_signature_blocks_for_running_app()`), and the new image's embedded public key must match one of those digests. An SD-card-only attacker who swaps in an image signed with their own key is rejected — the update key lineage is anchored to whatever key the *currently running* app carries.
+- Every build carries a Secure Boot v2 signature block, **but Phase 4 does no boot-time signature verification at all.** `SECURE_BOOT_CHECK_SIGNATURE` in the bootloader only compiles in under hardware secure boot or the no-secure-boot **ECDSA** option — neither applies to Kern's RSA config (`depends on SECURE_SIGNED_APPS_NO_SECURE_BOOT && SECURE_SIGNED_APPS_ECDSA_SCHEME`). So at boot the 2nd-stage bootloader only checks the SHA-256 for corruption and **an unsigned app boots**. The **only** cryptographic enforcement point in Phase 4 is the OTA path. Boot-time authenticity is Phase 6's job.
+- Dev builds are auto-signed with a per-clone throwaway key (`dev_signing_key.pem`, generated on first build, gitignored); releases re-sign the kept `kern-unsigned.bin` offline with the real key (`scripts/sign_release.sh`).
+- Pre-flight validation is **streamed from the SD file before any flash write** (chip ID, project name match, software downgrade check, then SHA-256 + RSA signature verification). Then `esp_ota_begin/write/end`, `esp_ota_set_boot_partition()`, reboot. `esp_ota_end()` also re-verifies the flashed copy and maps failure to `ESP_ERR_OTA_VALIDATE_FAILED`.
+- Rollback safety net: the new image must self-confirm (`esp_ota_mark_app_valid_cancel_rollback()`); otherwise the bootloader returns to the previous slot. `CONFIG_BOOTLOADER_APP_ROLLBACK_ENABLE=y` in defaults.
+
+```c
+// fw_update.c — the signature check (Phase 4 path)
+uint8_t verified_digest[32];
+esp_err_t verr = esp_secure_boot_verify_sbv2_signature_block(
+    (const ets_secure_boot_signature_t *)sig, digest, verified_digest);
+```
+
+### Partition table changes
+`partitions.csv` is now **OTA-only** (factory and `phy_init` dropped, dual 6MB `ota_0`/`ota_1` slots) and the table moved from `0x8000` to **`0x10000`** (`CONFIG_PARTITION_TABLE_OFFSET=0x10000`), growing the bootloader slot from 24KB to **56KB** — headroom the ~36KB FE and secure-boot bootloaders need:
+
+| addr | contents |
+|---|---|
+| 0x11000 | nvs (52K, encrypted) |
+| 0x1E000 | otadata (8K) |
+| 0x20000 | ota_0 (6M) |
+| 0x620000 | ota_1 (6M) |
+| 0xC20000 | storage / SPIFFS (~3.9M, plaintext — SPIFFS is incompatible with flash encryption) |
+
+### Phase 5 — Flash encryption: blocked on IDF ≥ 6.1
+Flash encryption is not implemented yet. The plan is concrete and the Phase 5 status note in `security-plan.md` reports the first on-device attempt:
+
+- **Key decision (July 2026):** **XTS-AES-128 in eFuse KEY3**, generated by the FE bootloader from TRNG on first boot and read-protected at burn time. The **Key Manager + XTS-AES-256** path is gated on chip revision ≥ v3.0; fielded Kern boards measure v1.0 (wave_4b) and v1.3 (wave_43).
+- **Blocker (as reported):** the provisioning attempt WDT-bootlooped ~1s into the splash (DSI underrun). Root cause: flash encryption auto-sets the MMU "sensitive" bit on every PSRAM page, while DMA masters (MIPI DSI, camera/ISP) access PSRAM outside that path. Upstream issues cited: [esp-idf#17708](https://github.com/espressif/esp-idf/issues/17708), [#17701](https://github.com/espressif/esp-idf/issues/17701), [#18427](https://github.com/espressif/esp-idf/issues/18427). The fix landed in **IDF 6.1-beta1**: `CONFIG_SPIRAM_ENC_EXEMPT`. Unblocking requires IDF ≥ 6.1 plus display/camera buffers allocated from the exempt region.
+
+### Phase 6 — Secure boot: fully specified, keys pending first signed release
+The theory-of-record doc is [docs/secure-boot.md](https://github.com/odudex/Kern/blob/master/docs/secure-boot.md): key generation/ceremony, three signing keys, bootloader signed with all three keys, manual `espefuse` lockdown, and the **on-device lockdown menu** (`Settings → Secure Boot → Lock with Developer Keys`, which would burn the three digests, the hardening eFuse set — `DIS_DIRECT_BOOT`, JTAG-disable, secure download mode — then `SECURE_BOOT_EN`, then write-protect `RD_DIS`).
+
+Public keys and digests are present in `kern_secure_boot/` (three RSA-3072 public keys, three 32-byte SHA-256 digests, `SHA256SUMS` + GPG detached signature), but the folder's `README.md` notes they are **placeholder keys pending the first signed release** — the authentic keys will be published following the key ceremony in `docs/secure-boot.md §3e`.
+
+**Not yet implemented:** the on-device lockdown menu itself. There is no `secure_boot.c` component in the firmware and `kern_secure_boot_lockdown()` exists only as a specification in the Markdown. The `sdkconfig.secure` overlay (which would set `CONFIG_SECURE_BOOT=y`) is also missing from the repository. Secure boot is *specified and keyed*, but the eFuse burn flow is still ahead.
+
+### Phase 6c — Anti-rollback (eFuse security version)
+Planned together with 6a/6b; nothing lands on `sdkconfig.defaults` until the secure-boot overlay exists (per `security-plan.md`: "never in `sdkconfig.defaults` — a `CONFIG_BOOTLOADER_APP_ANTI_ROLLBACK=y` on master would start burning counters on every device that flashes a master build"):
+
+- The ESP32-P4 `SECURE_VERSION` eFuse field is **16 bits, unary-encoded** — a **16-shot budget** for the device's entire lifetime. Verified against ESP-IDF source (`SECURE_VERSION, EFUSE_BLK0, 137, 16`).
+- Partition prerequisite is done: OTA-only table, no `factory`.
+- **Current state:** the Phase 4 software downgrade check (`fw_update.c`: `desc.secure_version < running->secure_version` → "Older security version rejected") is a **no-op today** because `.secure_version` is compiled to 0 in every build (no `CONFIG_BOOTLOADER_APP_ANTI_ROLLBACK`). It only becomes meaningful once the `sdkconfig.secure` overlay sets `CONFIG_BOOTLOADER_APP_ANTI_ROLLBACK=y` + a non-zero version.
+
+### Release & signing infrastructure
+- `scripts/release.sh` builds unsigned per-board firmware for all 5 boards (wave_43, wave_4b, wave_35, wave_5, crowpanel).
+- `scripts/sign_release.sh` runs **on an air-gapped signing PC**, signs each app with the primary RSA-3072 key via `espsecure.py sign_data --version 2`, verifies the signature, and generates a **sparse Intel HEX** (`kern-v<ver>.hex`) that preserves NVS/SPIFFS when reflashing.
+- A **web flasher** (under `site/` since v0.0.15) flashes via `flasher_args.json`.
 
 
 
-When it boots up normally, the control is given to [github.com/odudex/Kern/blob/master/main/main.c](https://github.com/odudex/Kern/blob/master/main/main.c).
-
-
-
-The progress on Kern secure boot:
-
-> **Me:** [@odudex](https://t.me/odudex) Are you currently working on Phase 3 (Secure Boot) implementation, or is all the development focus currently on design/UI improvements and hardware support? Just curious
-> 
-> **Odudex:** I halted secure boot activation for 2 reasons. 
-> 
-> - Espressif was still tweaking internals for P4.
-> - I was thinking about best methods to sign and hold the keys But I'm thinking about resuming it soon
 
 # Comparison Between Kern and Specter-DIY
 
-**Status Note:** Odudex (Kern's lead) has clarified that Kern currently lacks custom bootloader code or settings. The implementation is paused while waiting for ESP-IDF APIs (like anti-tamper key access) to stabilize. When resumed, Kern is strongly leaning towards hardware-based secure boot (eFuses) and is skeptical of software-based bootloader approaches (like Specter-DIY's) because they can be reversed.
+**Status Note:** Kern relies heavily on ESP32-P4 hardware features (eFuses) for security and uses the stock ESP-IDF second-stage bootloader rather than a custom one. Since the original review, Kern has implemented NVS encryption, anti-phishing HMAC, and air-gapped SD card firmware updates with RSA-3072 signature verification (Phases 0-4 of its security plan).
 
 **Architectural Comparison: Specter-DIY vs Kern:**
 ```mermaid
@@ -1076,30 +1188,28 @@ graph TD
     subgraph Specter["Specter-DIY Architecture"]
         direction TB
         SDCard_S[("SD Card\n(Executable Upgrades)")]
-        Verify_S("Software Verify\n(secp256k1)")
+        Verify_S("Custom Bootloader Verify\n(secp256k1 multisig + ICR)")
         Flash_S[("Internal Flash\n(Stateful Code)")]
-        IC_S("Integrity Check")
         MCU_S["Microcontroller\n(Stateless Secrets)"]
         
-        SDCard_S --> Verify_S --> Flash_S
-        Flash_S --> IC_S --> MCU_S
+        SDCard_S --> Verify_S --> Flash_S --> MCU_S
     end
 
-    subgraph Kern["Kern Architecture (ESP32-P4)"]
+    subgraph Kern["Kern Architecture (ESP32-P4, v0.0.15)"]
         direction TB
-        SDCard_K[("SD Card\n(Mnemonics/Keys)")]
-        Mount_K("VFS FAT Mount")
-        MCU_K["ESP32-P4 MCU\n(app_main)"]
+        SDCard_K[("SD Card\n(Firmware updates)")]
+        Verify_K("App-level OTA Verify\n(RSA-3072, signed-on-update)")
+        Flash_K[("Internal Flash\n(OTA-only layout, XIP)")]
+        MCU_K["ESP32-P4 MCU\n(app_main + esp_ota_ops)"]
         
-        eFuse_K["Hardware eFuses\n(Secure Boot Keys, HMAC)"]
-        Verify_K("Hardware Verify\n(Planned/Unimplemented)")
-        Flash_K[("Internal Flash\n(Stateful Code)")]
-        XIP_K("Execute In Place (XIP)")
+        eFuse_K["Hardware eFuses\n(3 SB digests, NVS-HMAC, anti-phish)"]
+        Verify_HW("Hardware Boot Verify\n(Phase 6, Planned)")
         
-        SDCard_K -.-> Mount_K -.-> MCU_K
-        eFuse_K -.-> Verify_K -.-> Flash_K
-        Flash_K --> XIP_K --> MCU_K
+        SDCard_K --> Verify_K --> Flash_K --> MCU_K
+        eFuse_K -. "Phase 6" .-> Verify_HW -.-> Flash_K
+        eFuse_K --> MCU_K
     end
+
     
     classDef specter fill:#e1f5fe,stroke:#0288d1,stroke-width:2px,color:#000000;
     classDef kern fill:#fbe9e7,stroke:#e64a19,stroke-width:2px,color:#000000;
@@ -1111,54 +1221,48 @@ graph TD
 ## 1. Boot Sequence & Hardware Initialization
 Because Kern is built on the ESP-IDF framework, it does not have a custom assembly or bare-metal entry point. Instead, the ESP32-P4 ROM bootloader chains to the ESP-IDF second-stage bootloader, which ultimately hands execution over to `app_main()`.
 
-- **Hardware Initialization:** `app_main()`  initializes the Board Support Package (BSP) components, bringing up the LDO PMIC rails, the non-volatile storage (NVS), the screen/framebuffer, and libwally for cryptography.
+- **Hardware Initialization:** `app_main()` initializes the Board Support Package (BSP) components, bringing up the Wi-Fi co-processor (held in reset for air-gap), encrypted non-volatile storage (NVS), the screen/framebuffer, and libwally for cryptography.
 - **File Location:** main.c
 **Code Excerpt:**
 
 ```c
 void app_main(void) {
-  // Initialize NVS for persistent settings
-  esp_err_t ret = nvs_flash_init();
+  // Air-gap: hold the Wi-Fi/BT co-processor (ESP32-C6) in reset first.
+  ESP_ERROR_CHECK(bsp_wifi_coproc_disable());
+
+  // Initialize NVS for persistent settings — encrypted if eFuse KEY4 is
+  // provisioned, plaintext otherwise
+  ESP_ERROR_CHECK(nvs_secure_init());
   // ...
   bsp_display_start();
-  ESP_LOGI(TAG, "Display initialized successfully");
-
-  // Initialize PMIC (AXP2101 or similar)
-  esp_err_t pmic_ret = bsp_pmic_init();
-
-  // Initialize Bitcoin crypto library
+  // ...
   const int wally_res = wally_init(0);
 }
 ```
 ## 2. Storage Media & File Detection (SD Card vs. Flash)
-Kern **does not** read its execution payload from an SD card on every boot. It boots directly from the internal flash partitions (`factory`, `ota_0`, `ota_1` defined in partitions.csv).
+Kern **does not** read its execution payload from an SD card on every boot. It boots directly from the internal flash partitions (`ota_0`, `ota_1` defined in partitions.csv — the `factory` partition was removed for anti-rollback).
 
-The SD card is solely used as an external storage volume for encrypted mnemonics and descriptors.
+The SD card is used as an external storage volume for encrypted mnemonics, descriptors, and **firmware updates**.
 
 - **File System Mounting:** The SD card is mounted using the ESP VFS FAT API.
-- **Missing Feature (File Detection):** There is currently **no equivalent** to Specter's `find_file()`  for locating kernel/firmware binaries. The documentation (security-plan.md) outlines a "Phase 4 - SD Card Updates" OTA mechanism, but an active C implementation for fetching an `.bin`  file from the SD card to flash it to an OTA slot is missing/unimplemented in the current codebase.
-- **File Location:** sd_card.c
+- **Firmware Updates:** Kern has an active C implementation (`core/fw_update.c`) that validates and flashes `.bin` updates from the SD card using the ESP-IDF OTA API.
+- **File Location:** fw_update.c
 **Code Excerpt:**
 
 ```c
-esp_err_t sd_card_init(void) {
+int fw_update_apply(const char *path, fw_update_progress_cb_t progress_cb,
+                    void *user_data, const char **err_out) {
   // ...
-  esp_vfs_fat_sdmmc_mount_config_t mount_config = {
-      .format_if_mount_failed = false,
-      .max_files = 5,
-      .allocation_unit_size = 16 * 1024,
-  };
-  
-  // Mounts FAT filesystem
-  ret = esp_vfs_fat_sdmmc_mount(SD_CARD_MOUNT_POINT, &host, &slot_config,
-                                &mount_config, &s_card);
+  const esp_partition_t *next = esp_ota_get_next_update_partition(NULL);
+  esp_err_t e = esp_ota_begin(next, OTA_WITH_SEQUENTIAL_WRITES, &ota);
+  // ... reads from SD card file and writes to OTA partition ...
+  e = esp_ota_set_boot_partition(next);
 }
 ```
 ## 3. Integrity & Cryptographic Verification (Secure Boot)
-Kern's security documentation (secure-boot.md) exhaustively outlines a robust ESP32-P4 Secure Boot V2 implementation utilizing ECDSA-P256 hardware signatures over a SHA-256 image digest. The repository even holds generation scripts and public keys in kern_secure_boot.
+Kern's security documentation (secure-boot.md) exhaustively outlines a robust ESP32-P4 Secure Boot V2 implementation utilizing **RSA-3072** hardware signatures over a SHA-256 image digest.
 
-- **Missing Feature:** Despite the extensive documentation, **Kern currently lacks a functional cryptographic verification system in its codebase.**
-The required `sdkconfig.secure`  ESP-IDF overlay is missing from the repository, and the lockdown function `kern_secure_boot_lockdown()`  exists exclusively as a snippet in a Markdown file, not in the C firmware. Currently, Kern boots unmodified/unsigned binaries normally.
+- **Current Status:** Kern has implemented cryptographic verification for OTA updates (Phase 4). When flashing an update from the SD card, the app verifies the update's RSA-3072 signature block against the key digests of the currently running app. However, boot-time verification (Phase 6) and flash encryption (Phase 5) are still pending. Thus, currently an unsigned app boots normally, but updates must be cryptographically signed.
 ## 4. Memory Loading & Handoff
 Unlike Specter, which manually copies the entire FAT32 payload block-by-block into RAM, Kern uses Hardware XIP (eXecute-In-Place).
 
@@ -1208,7 +1312,7 @@ esp_err_t esp_hmac_calculate(hmac_key_id_t key_id,
                               const void *message, size_t message_len,
                               uint8_t *hmac);
 ```
-- **Evil Maid & Forensic Ghosting:** According to the philosophy outlined in security-plan.md, Kern plans to utilize Flash/NVS Encryption (Phase 5/6) and Secure Boot (Phase 3). _However_, because those features are currently missing from the codebase, **Kern currently falls victim to Evil Maid attacks and flash extraction.** An attacker could physically clone the SPI flash, read the hashed PIN out of plaintext NVS, or overwrite the codebase with a malicious binary that fakes the Anti-Phishing screen (since Secure Boot is untoggled protections aren't enforced yet active).
+- **Evil Maid & Forensic Ghosting:** Kern utilizes NVS encryption via a hardware-derived HMAC key (Phase 3) and requires RSA-3072 signed binaries for OTA updates (Phase 4). However, because Flash Encryption (Phase 5) and Boot-Time Secure Boot enforcement (Phase 6) are not yet active, an attacker with physical access could still clone the SPI flash or overwrite the bootloader/application partitions via JTAG/UART with a malicious binary. Until Phase 6 permanently locks down the hardware eFuses, full evil maid protections are not complete.
 
 # Bootloader Related Things in SeedSigner MicroPython Builder
 This document contains a complete description of how the repository produces, packages, and exposes the ESP32 bootloader artifact, and where bootloader behavior and configuration live in the source tree.

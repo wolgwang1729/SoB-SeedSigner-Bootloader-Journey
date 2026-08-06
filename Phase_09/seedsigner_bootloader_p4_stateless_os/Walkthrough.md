@@ -251,7 +251,7 @@ Automated build, flash, and serial assertion testing was executed via `run_test.
 [PASS] Payload binary verified.
 
 === Step 4: Signing Payload with generate_signed_payload.py ===
-Signed /home/wolgwang/Desktop/SoB/Phase_9/hello_world_esp32p4/build/seed.bin successfully!
+Signed /home/wolgwang/Desktop/SoB/Phase_09/hello_world_esp32p4/build/seed.bin successfully!
 [PASS] Signed payload seed.bin generated successfully.
 
 === Step 5: Flashing Binaries to Target Port (/dev/ttyACM0) ===

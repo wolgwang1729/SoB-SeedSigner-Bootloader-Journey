@@ -6,7 +6,7 @@ This is a clean, unmodified standard ESP-IDF `hello_world` project created for t
 
 1. **Copied Example**: Copied the standard `hello_world` example from the local ESP-IDF installation:
    ```bash
-   cp -r ~/esp/esp-idf/examples/get-started/hello_world <repo>/Phase_8/hello_world_esp32s3
+   cp -r ~/esp/esp-idf/examples/get-started/hello_world <repo>/Phase_08/hello_world_esp32s3
    ```
 2. **Environment Setup**: Sourced the ESP-IDF environment variables:
    ```bash
@@ -34,7 +34,7 @@ This is a plain, unprotected firmware that executes from flash and loops indefin
 
 Once your board is connected via USB, run:
 ```bash
-cd <repo>/Phase_8/hello_world_esp32s3
+cd <repo>/Phase_08/hello_world_esp32s3
 source ~/esp/esp-idf/export.sh
 idf.py flash monitor
 ```

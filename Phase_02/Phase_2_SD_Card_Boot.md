@@ -201,7 +201,7 @@ To replicate this environment in QEMU, follow these precise build steps:
 1. **Compile the RAM Payload (`hello_world`)**
    Navigate to the payload project and build it.
    ```bash
-   cd Phase_2/plain_hello_world
+   cd Phase_02/plain_hello_world
    idf.py build
    ```
 

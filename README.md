@@ -24,23 +24,23 @@ The R&D process is thoroughly documented and divided into chronological phases:
 * **[`LiteratureReview.MD`](./LiteratureReview.MD):** A detailed analysis of the Specter-DIY bootloader, ESP-IDF internals, and Kern architecture.
 
 ### Phases
-* **[Phase 1: Minimal Secure Boot Prototype](./Phase_1/Phase_1_Prototype.md)**
+* **[Phase 1: Minimal Secure Boot Prototype](./Phase_01/Phase_1_Prototype.md)**
   Setting up ESP-IDF and enabling Secure Boot v2 using the official ESP32-S3 QEMU emulator. Demonstrates Trust-On-First-Use (TOFU) eFuse burning and failure modes.
-* **[Phase 2: SD Card Boot & Stateless Execution](./Phase_2/Phase_2_SD_Card_Boot.md)**
+* **[Phase 2: SD Card Boot & Stateless Execution](./Phase_02/Phase_2_SD_Card_Boot.md)**
   Development of the App-Based Secure Loader. Implements anti-TOCTOU SD card logic, `secp256k1` signature verification, and the Cache MMU Hijack technique to route instruction fetches to PSRAM.
-* **[Phase 3: Hardware Secure Boot Integration](./Phase_3/Phase_3_Hardware_Secure_Boot.md)**
+* **[Phase 3: Hardware Secure Boot Integration](./Phase_03/Phase_3_Hardware_Secure_Boot.md)**
   Merging Layer 1 (Secure Boot v2) and Layer 2 (App-Based Loader) into a complete, emulated end-to-end boot flow.
-* **[Phase 4: Loading SeedSigner Firmware](./Phase_4/Phase_4_Loading_SeedSigner_Firmware.md)**
+* **[Phase 4: Loading SeedSigner Firmware](./Phase_04/Phase_4_Loading_SeedSigner_Firmware.md)**
   Adapting the bootloader pipeline to load the actual MicroPython payload. Covers deep architectural fixes for IRAM/DRAM access violations, hidden MMU misalignments, and stack self-overwrite bugs.
-* **[Phase 5: Environment Upgrade & MicroPython Execution](./Phase_5/Phase_5_Environment_Upgrade_and_MicroPython_Execution.md)**
+* **[Phase 5: Environment Upgrade & MicroPython Execution](./Phase_05/Phase_5_Environment_Upgrade_and_MicroPython_Execution.md)**
   Upgrading to ESP-IDF v6.0.1 and successfully booting the official MicroPython build for the ESP32-S3 via the stateless Secure Loader.
-* **[Phase 6: UI Emulation & Validation via Wokwi](./Phase_6/Phase_6_UI_Emulation_and_Validation_via_Wokwi.md)**
+* **[Phase 6: UI Emulation & Validation via Wokwi](./Phase_06/Phase_6_UI_Emulation_and_Validation_via_Wokwi.md)**
   Visually verifying the SeedSigner UI using Wokwi’s virtual hardware emulation. Resolving PSRAM mismatch, bypassing bootloader limitations, and executing the raw MicroPython OS to a fully interactive REPL prompt on the ESP32-S3 architecture.
-* **[Phase 7: Flash Hardening](./Phase_7/Phase_7_Flash_Hardening.md)**
+* **[Phase 7: Flash Hardening](./Phase_07/Phase_7_Flash_Hardening.md)**
   Threat analysis of the stateless boot path on the ESP32-S3 QEMU prototype: seed stashing in flash, brute-force attacks, and the flash-fill mitigation. Introduces the anti-TOCTOU and secret-stashing protections carried into later phases.
-* **[Phase 8: Hardware Bring-up](./Phase_8/Phase_8_Hardware_Bring_up.md)**
+* **[Phase 8: Hardware Bring-up](./Phase_08/Phase_8_Hardware_Bring_up.md)**
   Moving the secure loader off emulation onto real ESP32-S3 silicon: hardware bring-up, virtual eFuse secure-boot testing without physical burns, and validation of the stateless handoff on hardware.
-* **[Phase 9: ESP32-P4 Bring-up](./Phase_9/Phase_9_ESP32P4_Bring_up.md)**
+* **[Phase 9: ESP32-P4 Bring-up](./Phase_09/Phase_9_ESP32P4_Bring_up.md)**
   Porting the stateful and stateless loaders to the ESP32-P4 (RISC-V). RISC-V boot flow, P4 cache/MMU differences, and running the secured loader on the Waveshare ESP32-P4 board.
 * **[Phase 10: ESP32-P4 PSRAM Handoff](./Phase_10/Phase_10_ESP32P4_PSRAM_Handoff.md)**
   First stateless handoff on the ESP32-P4: Cache MMU remap of IROM/DROM to PSRAM physical pages, eviction ordering, and booting a hello-world payload entirely from PSRAM.

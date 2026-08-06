@@ -38,12 +38,12 @@ ESP-IDF 2nd-stage bootloader (0x2000)
 | Artifact | From | To |
 |---|---|---|
 | Loader (build system, `main/main.c`, `partitions.csv`, `sdkconfig.defaults`, pytest) | `Phase_11/seedsigner_bootloader_p4_stateless_os` | `Phase_12/seedsigner_bootloader_p4_stateless_os` |
-| `specter_crypto` component (bl_section, bl_signature, bl_syscalls, bl_util, bl_integrity_check, secp256k1, sha2, bech32, crc32) | `Phase_9/seedsigner_bootloader_p4_stateless_os/components/specter_crypto` | `Phase_12/.../components/specter_crypto` (nested `.git` stripped) |
-| Signing tool `tools/generate_signed_payload.py` + `tools/package_firmware.py` | `Phase_9/.../tools` | `Phase_12/.../tools` |
+| `specter_crypto` component (bl_section, bl_signature, bl_syscalls, bl_util, bl_integrity_check, secp256k1, sha2, bech32, crc32) | `Phase_09/seedsigner_bootloader_p4_stateless_os/components/specter_crypto` | `Phase_12/.../components/specter_crypto` (nested `.git` stripped) |
+| Signing tool `tools/generate_signed_payload.py` + `tools/package_firmware.py` | `Phase_09/.../tools` | `Phase_12/.../tools` |
 | Payload `hello_world_esp32p4_stateless_payload` | `Phase_11/hello_world_esp32p4_stateless_payload` | `Phase_12/hello_world_esp32p4_stateless_payload` (boots through the `stateless_shim`; `main/hello_world_esp32p4.c` prints a `PHASE 12` banner) |
 | Stock-payload repro `hello_world_esp32p4_stock_shim` | `$IDF/examples/get-started/hello_world` (unmodified) + `components/stateless_shim` | `Phase_12/hello_world_esp32p4_stock_shim` — proves the shim boots an **untouched stock ESP-IDF app**; only edits: `main/CMakeLists.txt` gains `REQUIRES stateless_shim`, `sdkconfig.defaults` copied, and the example's `MINIMAL_BUILD` line removed (see caveat below) |
 | Run scripts | Phase 11 `run.sh` | `build_payload.sh` (build + sign payload → `build/seedsigner_esp32p4.bin`), `build_micropython.sh` (sign the externally-built `micropython.bin`), `run.sh` (flash the loader artifacts only — payload-agnostic, the payload boots from the SD card) |
-| Secure Boot V2 signing key `secure_boot_signing_key.pem` (RSA) | `Phase_9/.../secure_boot_signing_key.pem` | `Phase_12/.../secure_boot_signing_key.pem` (same key — the eFuse digest matches the bootloader/app builds) |
+| Secure Boot V2 signing key `secure_boot_signing_key.pem` (RSA) | `Phase_09/.../secure_boot_signing_key.pem` | `Phase_12/.../secure_boot_signing_key.pem` (same key — the eFuse digest matches the bootloader/app builds) |
 
 ## 4. Secure boot chain (restored from Phase 9)
 

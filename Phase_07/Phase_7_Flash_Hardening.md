@@ -33,7 +33,7 @@ To make this defense user-verifiable, the bootloader continuously verifies the i
 
 ## 3. Prototype Implementation (QEMU)
 
-A working prototype has been integrated into the `Phase_7/seedsigner_bootloader_proto` codebase. 
+A working prototype has been integrated into the `Phase_07/seedsigner_bootloader_proto` codebase. 
 
 ### Core Logic (`main.c`)
 The function `fill_and_hash_remaining_flash()` was injected into the bootloader initialization sequence. For the prototype, it targets a 512KB mock partition at `0x700000`:

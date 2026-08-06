@@ -38,4 +38,4 @@ Shortly after preparing the `hardware_test` bootloader, S3 bring-up stalled. Han
 - **The pivot:** rather than block on board handling, I pivoted to the newly arrived ESP32-P4 module (Waveshare ESP32-P4 WiFi6 Touch LCD 4.3 board), whose bring-up became Phase 9 and eventually the primary platform for Phases 9–13.
 
 ## 7. What Comes Next — Phase 9
-Phase 9 begins the ESP32-P4 bring-up: I set up a fresh ESP-IDF v5.5 workspace for the P4, encounter the fundamental `0x40000000` flash-cache limitation, and split the strategy into a stateful flash-resident loader (Path 1) vs. strictly stateless PSRAM execution (Path 2). See `Phase_9/Phase_9_ESP32P4_Bring_up.md` for the full story.
+Phase 9 begins the ESP32-P4 bring-up: I set up a fresh ESP-IDF v5.5 workspace for the P4, encounter the fundamental `0x40000000` flash-cache limitation, and split the strategy into a stateful flash-resident loader (Path 1) vs. strictly stateless PSRAM execution (Path 2). See `Phase_09/Phase_9_ESP32P4_Bring_up.md` for the full story.

@@ -73,10 +73,10 @@ For anyone aiming to replicate this successful Wokwi emulation, follow these exa
      ghcr.io/kdmukai-bot/seedsigner-micropython-builder-base:latest \
      bash -lc 'cd ports/esp32 && make USER_C_MODULES=../../../../micropython-modules/micropython.cmake BOARD=SEEDSIGNER_WAVESHARE_EPD35B'
    ```
-4. Copy the generated `seed.bin` payload to `Phase_6/seedsigner_bootloader_proto/dummy_fat_dir/`.
+4. Copy the generated `seed.bin` payload to `Phase_06/seedsigner_bootloader_proto/dummy_fat_dir/`.
 
 ### Step 2: Build the Proto-Bootloader
-1. Navigate to the `Phase_6/seedsigner_bootloader_proto` directory.
+1. Navigate to the `Phase_06/seedsigner_bootloader_proto` directory.
 2. Use the builder Docker container to compile the bootloader and package the Wokwi image:
    ```bash
    docker run --rm -v $(pwd):/workspace -w /workspace \

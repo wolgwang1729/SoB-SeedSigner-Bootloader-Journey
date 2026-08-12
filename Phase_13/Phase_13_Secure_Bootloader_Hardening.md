@@ -153,6 +153,18 @@ The production hardening roadmap — HMAC eFuse binding (KEY5, upgrades this pro
 
 ## 9. Notes / caveats
 
+- **Signature threshold enforced (F8, 2026-08-06):** the loader requires at
+  least `SIG_THRESHOLD` (=1) valid secp256k1 signatures before booting a payload
+  (`main.c`, `if (blsig_is_error(sig_res) || sig_res < SIG_THRESHOLD)`).
+  Upstream Specter enforces the same contract caller-side (`bootloader.c
+  verify_multisig()`); `blsig_verify_multisig()` returns a *count* of valid
+  signatures and only uses negative values for errors, so the caller must always
+  bound it — without that, `n_valid == 0` (bundle signed by an unknown key)
+  would be treated as PASSED (CRITICAL F8). Verified on the board by Phase 14
+  T5: a rogue-key bundle halts with
+  `Signature verification failed: 0 valid signature(s), need 1`
+  (`Phase_14/logs/t05_wrongkey.txt`). See the Phase 14 security
+  analysis.
 - **No eFuse burns in this phase** — everything is reversible. The `random_fill` region can be erased and re-provisioned anytime.
 - **The `nvs` partition is plaintext** — it stores the digest as raw bytes (not via the NVS flash driver, no encryption). The digest is only a cache: it is re-computed and compared every boot, so tampering with the stored digest itself causes a mismatch and a halt.
 - **SHA-256 only (no HMAC)** — the 44-bit brute-force exposure (Phase 7 Section 3) is partially mitigated by 4 words vs 2, but not fully closed. HMAC binding is a future phase.

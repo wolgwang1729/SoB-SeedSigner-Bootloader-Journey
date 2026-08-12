@@ -68,16 +68,6 @@ const bl_pubkey_t vendor_keys[] = {
 };
 const bl_pubkey_t *pubkeys_boot[] = { vendor_keys, NULL };
 
-// Minimum number of valid signatures required before the loader boots a
-// payload. This deployment authorizes exactly one vendor key (single-key
-// multisig), so at least 1 valid signature is required. blsig_verify_multisig()
-// returns the *count* of valid signatures (0 = none recognized) and only uses
-// negative values for errors, so the caller MUST enforce a lower bound itself —
-// blsig_is_error() alone would accept 0 as success (upstream Specter enforces
-// this per-keyset threshold in bootloader.c verify_multisig(); the loader has
-// to replicate it here).
-#define SIG_THRESHOLD 1
-
 // Progress callback fed to blsig_verify_multisig (secp256k1 is slow). We yield
 // instead of esp_task_wdt_reset() — the main task isn't auto-subscribed to the
 // TWDT in IDF v5.
@@ -585,12 +575,8 @@ void app_main(void)
                     (uint8_t *)sig_hdr + sizeof(bl_section_t), sig_hdr->pl_size,
                     pubkeys_boot, sig_msg, sig_msg_size, 0);
 
-                if (blsig_is_error(sig_res) || sig_res < SIG_THRESHOLD) {
-                    if (blsig_is_error(sig_res)) {
-                        ESP_LOGE(TAG, "Signature verification failed: %s", blsig_error_text(sig_res));
-                    } else {
-                        ESP_LOGE(TAG, "Signature verification failed: %d valid signature(s), need %d", sig_res, SIG_THRESHOLD);
-                    }
+                if (blsig_is_error(sig_res)) {
+                    ESP_LOGE(TAG, "Signature verification failed: %s", blsig_error_text(sig_res));
                     ESP_LOGE(TAG, "HALTING execution.");
                     memset(psram_buf, 0, fw_size);
                     while (1) vTaskDelay(1000 / portTICK_PERIOD_MS);

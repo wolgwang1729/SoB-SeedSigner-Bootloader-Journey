@@ -1,0 +1,166 @@
+ESP-ROM:esp32p4-eco2-20240710
+Build:Jul 10 2024
+rst:0x1 (POWERON),boot:0x30f (SPI_FAST_FLASH_BOOT)
+SPI mode:DIO, clock div:2
+load:0x4ff33fb0,len:0x3004
+load:0x4ff29ed0,len:0xe84
+load:0x4ff2cbd0,len:0x5c90
+entry 0x4ff29eda
+W (33) boot.esp32p4: eFuse virtual mode is enabled. If Secure boot or Flash encryption is enabled then it does not provide any security. FOR TESTING ONLY!
+I (49) boot: ESP-IDF ac63a927 2nd stage bootloader
+I (50) boot: compile time Aug  5 2026 10:32:02
+W (50) boot: Unicore bootloader
+I (52) boot: chip revision: v1.3
+I (53) boot: efuse block revision: v0.3
+I (56) boot.esp32p4: SPI Speed      : 40MHz
+I (60) boot.esp32p4: SPI Mode       : DIO
+I (64) boot.esp32p4: SPI Flash Size : 8MB
+I (68) boot: Enabling RNG early entropy source...
+I (72) boot: Partition Table:
+I (75) boot: ## Label            Usage          Type ST Offset   Length
+I (81) boot:  0 nvs              Unknown data     01 99 00021000 0000c000
+I (88) boot:  1 otadata          OTA data         01 00 0002d000 00002000
+I (94) boot:  2 phy_init         RF data          01 01 0002f000 00001000
+I (101) boot:  3 factory          factory app      00 00 00030000 00100000
+W (107) efuse: [Virtual] try loading efuses from flash: 0x130000 (offset)
+W (114) efuse: [Virtual] Loading virtual efuse blocks from flash
+EFUSE_BLKx:
+0) 00800101 000f0200 09c00000 00100000 00000022 00000000 
+1) 0ae0ec44 0000e8f6 ae054313 98104b99 d1b6010c 00000218 
+2) 78f83b39 38e58155 ef71dae8 5c2b1488 23b8ea35 59123f90 4a2192e4 0084e198 
+3) 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 
+4) 5af5befe a9fbf658 5c165588 5b65d5fa c03e4b56 b34da505 c9f246be eaa599b2 
+5) 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 
+6) 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 
+7) 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 
+8) 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 
+9) 00000000 00000000 00000000 00000000 0000000�ESP-ROM:esp32p4-eco2-20240710
+Build:Jul 10 2024
+rst:0x1 (POWERON),boot:0x30f (SPI_FAST_FLASH_BOOT)
+SPI mode:DIO, clock div:2
+load:0x4ff33fb0,len:0x3004
+load:0x4ff29ed0,len:0xe84
+load:0x4ff2cbd0,len:0x5c90
+entry 0x4ff29eda
+W (33) boot.esp32p4: eFuse virtual mode is enabled. If Secure boot or Flash encryption is enabled then it does not provide any security. FOR TESTING ONLY!
+I (49) boot: ESP-IDF ac63a927 2nd stage bootloader
+I (50) boot: compile time Aug  5 2026 10:32:02
+W (50) boot: Unicore bootloader
+I (52) boot: chip revision: v1.3
+I (53) boot: efuse block revision: v0.3
+I (56) boot.esp32p4: SPI Speed      : 40MHz
+I (60) boot.esp32p4: SPI Mode       : DIO
+I (64) boot.esp32p4: SPI Flash Size : 8MB
+I (68) boot: Enabling RNG early entropy source...
+I (72) boot: Partition Table:
+I (75) boot: ## Label            Usage          Type ST Offset   Length
+I (81) boot:  0 nvs              Unknown data     01 99 00021000 0000c000
+I (88) boot:  1 otadata          OTA data         01 00 0002d000 00002000
+I (94) boot:  2 phy_init         RF data          01 01 0002f000 00001000
+I (101) boot:  3 factory          factory app      00 00 00030000 00100000
+W (107) efuse: [Virtual] try loading efuses from flash: 0x130000 (offset)
+W (114) efuse: [Virtual] Loading virtual efuse blocks from flash
+EFUSE_BLKx:
+0) 00800101 000f0200 09c00000 00100000 00000022 00000000 
+1) 0ae0ec44 0000e8f6 ae054313 98104b99 d1b6010c 00000218 
+2) 78f83b39 38e58155 ef71dae8 5c2b1488 23b8ea35 59123f90 4a2192e4 0084e198 
+3) 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 
+4) 5af5befe a9fbf658 5c165588 5b65d5fa c03e4b56 b34da505 c9f246be eaa599b2 
+5) 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 
+6) 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 
+7) 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 
+8) 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 
+9) 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 
+10) 62587a2d 88888888 88888888 00000003 00000000 00000000 00000000 00000000 
+
+I (191) boot:  4 efuse            efuse            01 05 00130000 00002000
+I (198) boot:  5 random_fill      Unknown data     01 06 00132000 006ce000
+I (206) boot: End of partition table
+I (209) boot: Defaulting to factory image
+I (212) esp_image: segment 0: paddr=00030020 vaddr=40040020 size=1521ch ( 86556) map
+I (239) esp_image: segment 1: paddr=00045244 vaddr=30100000 size=00070h (   112) load
+I (240) esp_image: segment 2: paddr=000452bc vaddr=4ff40000 size=0ad5ch ( 44380) load
+I (254) esp_image: segment 3: paddr=00050020 vaddr=40000020 size=340e8h (213224) map
+I (301) esp_image: segment 4: paddr=00084110 vaddr=4ff4ad5c size=03498h ( 13464) load
+I (306) esp_image: segment 5: paddr=000875b0 vaddr=4ff4e200 size=04ff8h ( 20472) load
+I (313) esp_image: segment 6: paddr=0008c5b0 vaddr=50108018 size=00854h (  2132) load
+I (315) esp_image: segment 7: paddr=0008ce0c vaddr=00000000 size=031c4h ( 12740) 
+I (324) esp_image: Verifying image signature...
+I (326) secure_boot_v2: Verifying with RSA-PSS...
+I (343) secure_boot_v2: Signature verified successfully!
+I (348) boot: Loaded app from partition at offset 0x30000
+I (348) secure_boot_v2: enabling secure boot v2...
+I (348) secure_boot_v2: secure boot v2 is already enabled, continuing..
+I (353) boot: Disabling RNG early entropy source...
+I (371) hex_psram: vendor id    : 0x0d (AP)
+I (371) hex_psram: Latency      : 0x01 (Fixed)
+I (371) hex_psram: DriveStr.    : 0x00 (25 Ohm)
+I (372) hex_psram: dev id       : 0x03 (generation 4)
+I (377) hex_psram: density      : 0x07 (256 Mbit)
+I (381) hex_psram: good-die     : 0x06 (Pass)
+I (385) hex_psram: SRF          : 0x02 (Slow Refresh)
+I (390) hex_psram: BurstType    : 0x00 ( Wrap)
+I (394) hex_psram: BurstLen     : 0x03 (2048 Byte)
+I (399) hex_psram: BitMode      : 0x01 (X16 Mode)
+I (403) hex_psram: Readlatency  : 0x02 (10 cycles@Fixed)
+I (408) hex_psram: DriveStrength: 0x00 (1/1)
+I (412) MSPI Timing: Enter psram timing tuning
+I (588) esp_psram: Found 32MB PSRAM device
+I (588) esp_psram: Speed: 80MHz
+I (589) hex_psram: psram CS IO is dedicated
+I (589) cpu_start: Unicore app
+I (590) cpu_start: Single core mode
+I (1873) esp_psram: SPI SRAM memory test OK
+I (1884) cpu_start: GPIO 38 and 37 are used as console UART I/O pins
+I (1884) cpu_start: Pro cpu start user code
+I (1884) cpu_start: cpu freq: 360000000 Hz
+I (1886) app_init: Application information:
+I (1890) app_init: Project name:     seedsigner_secure_loader
+I (1896) app_init: App version:      c829fc3-dirty
+I (1900) app_init: Compile time:     Aug  5 2026 10:33:01
+I (1905) app_init: ELF file SHA256:  1e3dcdfbb...
+I (1910) app_init: ESP-IDF:          ac63a927
+I (1914) efuse_init: Min chip rev:     v0.0
+I (1918) efuse_init: Max chip rev:     v1.99 
+I (1922) efuse_init: Chip rev:         v1.3
+I (1926) heap_init: Initializing. RAM available for dynamic allocation:
+I (1932) heap_init: At 4FF00000 len 0003AFC0 (235 KiB): RETENT_RAM
+I (1938) heap_init: At 4FF3AFC0 len 00004BF0 (18 KiB): RAM
+I (1943) heap_init: At 4FF9D800 len 00002800 (10 KiB): RAM
+I (1949) heap_init: At 5010886C len 00007794 (29 KiB): RTCRAM
+I (1954) heap_init: At 30100070 len 00001F90 (7 KiB): SPM
+I (1959) esp_psram: Adding pool of 32768K of PSRAM memory to heap allocator
+I (1967) spi_flash: detected chip: gd
+I (1969) spi_flash: flash io: dio
+W (1972) spi_flash: Detected size(16384k) larger than the size in the binary image header(8192k). Using the size in the binary image header.
+W (1984) efuse_init: eFuse virtual mode is enabled. If Secure boot or Flash encryption is enabled then it does not provide any security. FOR TESTING ONLY!
+W (1999) efuse: [Virtual] try loading efuses from flash: 0x130000 (offset)
+W (2005) efuse: [Virtual] Loading virtual efuse blocks from flash
+EFUSE_BLKx:
+0) 00800101 000f0200 09c00000 00100000 00000022 00000000 
+1) 0ae0ec44 0000e8f6 ae054313 98104b99 d1b6010c 00000218 
+2) 78f83b39 38e58155 ef71dae8 5c2b1488 23b8ea35 59123f90 4a2192e4 0084e198 
+3) 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 
+4) 5af5befe a9fbf658 5c165588 5b65d5fa c03e4b56 b34da505 c9f246be eaa599b2 
+5) 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 
+6) 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 
+7) 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 
+8) 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 
+9) 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 
+10) 62587a2d 88888888 88888888 00000003 00000000 00000000 00000000 00000000 
+
+I (2082) sleep_gpio: Configure to isolate all GPIO pins in sleep state
+I (2089) sleep_gpio: Enable automatic switching of GPIO sleep configuration
+I (2095) main_task: Started on CPU0
+I (2095) esp_psram: Reserving pool of 32K of internal memory for DMA/internal allocations
+I (2105) main_task: Calling app_main()
+I (2105) SEEDSIGNER_LOADER: SeedSigner Loader — ESP32-P4 PSRAM payload
+W (2115) ldo: The voltage value 0 is out of the recommended range [500, 2700]
+I (2165) SEEDSIGNER_LOADER: SD card mounted at /sdcard
+I (2255) SEEDSIGNER_LOADER: Unmounting SD card before verification (TOCTOU-safe)...
+I (2255) SEEDSIGNER_LOADER: [SD CARD] Loaded 192144 bytes from /sdcard/seedsigner_esp32p4.bin
+I (2265) SEEDSIGNER_LOADER: Specter bootloader section detected
+I (2265) SEEDSIGNER_LOADER: Firmware version: 1
+I (2325) SEEDSIGNER_LOADER: Performing secp256k1 multisig verification...
+E (2345) SEEDSIGNER_LOADER: Signature verification failed: Signature verification failed
+E (2345) SEEDSIGNER_LOADER: HALTING execution.

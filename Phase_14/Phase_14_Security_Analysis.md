@@ -1,4 +1,8 @@
-# Phase 14 - Security Analysis of the Stateless Secure Bootloader (ESP32-P4)
+# Phase 14: Security Analysis of the Stateless Secure Bootloader (ESP32-P4)
+
+- **Date:** August 14, 2026
+- **Author:** Mayank (wolgwang)
+- **Project:** SeedSigner Secure Boot — Summer of Bitcoin
 
 This is the master security analysis for the project. It threat-models the
 Phase 13 stateless secure bootloader
@@ -20,8 +24,6 @@ that exploration into the real implementation - a ~6.8 MB TRNG-filled
 `random_fill` partition, a four-word BIP-39 proof, hardware-verified on the
 ESP32-P4. The scenarios below are therefore re-derived here **in full** against
 the current Phase 13 build, not deferred to the Phase 7 write-up.
-
----
 
 ## 1. Who the attacker is
 

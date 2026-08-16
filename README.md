@@ -48,11 +48,19 @@ The R&D process is thoroughly documented and divided into chronological phases:
   Booting the official MicroPython build statelessly through the loader. Introduces the reusable `stateless_shim` and the CLIC vector-table fix required for shim-based payloads on the P4.
 * **[Phase 12: Specter Secure App Loader on Stateless Boot](./Phase_12/Phase_12_Specter_Secure_App_Loader_on_Stateless_Boot.md)**
   Loading firmware from a FAT32 SD card in the Specter `bl_section_t` bundle format with secp256k1 multisig verification, plus the build/sign tooling for wrapping hello-world and MicroPython payloads.
-* **[Phase 13: Secure Bootloader Hardening](./Phase_13/Phase_13_Secure_Bootloader_Hardening.md)**
+* **[Phase 13: Secure Bootloader Hardening](./Phase_13/Phase_13_Secure_Bootloader_Hardening.md)**  
   Anti-phishing hardening of the loader: TRNG flash-fill of a dedicated partition hashed into BIP-39 words printed at each boot, plus a production hardening plan (HMAC eFuse binding, anti-rollback, NVS/flash encryption, key rotation, lockdown).
+* **[Phase 14: Security Analysis](./Phase_14/Phase_14_Security_Analysis.md)**  
+  Master security analysis of the Phase 13 chain on the ESP32-P4: threat model, 12 attack scenarios (A1–A12), discarded attacks register (D1–D8), and a 16-test evidence campaign (T1–T16) verified on real silicon.
+* **[Phase 15: ESP32-S3 Stateless Secure Loader Port](./Phase_15/Phase_15_ESP32S3_Stateless_Loader.md)**  
+  Porting the stateless secure loader to the Xtensa ESP32-S3: IRAM JMP zone (`0x403A0000`), shared I/D MMU table (`0x600C5000`), fixed static RAM heap budgeting, and hardware verification with the S3 shim payload.
+* **[Phase 16: MicroPython on ESP32-S3 Stateless Boot](./Phase_16/Phase_16_ESP32S3_MicroPython_Stateless.md)**  
+  Porting the SeedSigner MicroPython runtime to the ESP32-S3 stateless loader: Xtensa windowed ABI setup (`entry.S`), 5 MB PSRAM heap injection, `__wrap_uart_stdout_init` REPL intercept, and interactive REPL verification on physical silicon.
+* **[Phase 17: ESP32-S3 Pure SD Card Boot & Flash Hardening](./Phase_17/Phase_17_ESP32S3_SDCard_Stateless_Boot.md)**  
+  Elimination of all temporary flash payload partitions, expansion of `random_fill` to **5.875 MB** for maximal TRNG anti-phishing proof (4 BIP-39 words), atomic SDMMC/SDSPI ingestion with immediate unmount (anti-TOCTOU), dual SDSPI/SDMMC host support, and hardware verification on real ESP32-S3 silicon.
 
-## Testing & Emulation
+## Testing & Hardware Environment
 
-To prevent permanently bricking physical development boards by irreversibly blowing eFuses during early development, the majority of this R&D was conducted using the **QEMU emulator** configured for the `esp32s3` machine type. 
-
-*Note: Phases 1–7 were developed on QEMU/Wokwi emulation (ESP32-S3) to avoid permanently burning eFuses during early R&D. The transition to physical bare-metal hardware happened in the second half of the program: Phase 8 brought the loader up on real ESP32-S3 silicon, and Phases 9–13 run on a Waveshare ESP32-P4 board (target config `WAVESHARE_ESP32_P4_WIFI6_TOUCH_LCD_43`, but dev setup is headless — no LCD connected). Secure-boot eFuse writes stay virtual (`CONFIG_EFUSE_VIRTUAL=y`), so the trust-on-first-use flow is testable on real chips without one-time physical burns.*
+* **Targets:** **ESP32-P4** (Waveshare ESP32-P4 WiFi6 Touch LCD 4.3) and **ESP32-S3** (ESP32-S3-DEV-KIT-N8R8 / Waveshare S3 Touch LCD 3.5B).
+* **Toolchain:** ESP-IDF v5.5 (`~/esp/esp-idf-v5.5`).
+* **Virtual eFuses:** All Secure Boot v2 eFuse operations during R&D use virtual mode (`CONFIG_EFUSE_VIRTUAL=y` + `KEEP_IN_FLASH` in the `efuse` partition), allowing comprehensive, repeatable testing on physical silicon without irreversible hardware burning.

@@ -1,0 +1,65 @@
+# Hardware settings (flash, SPIRAM, SPI ISR, PM, CPU freq) are provided by
+# esp-board-common's sdkconfig.defaults via BOARD_CONFIG_DIR.
+# This file contains only MicroPython-specific additions and overrides.
+
+# SPI slave ISR in IRAM (not in esp-board-common; keep for safety).
+CONFIG_SPI_SLAVE_ISR_IN_IRAM=y
+
+## Network transport stack kept enabled for build stability;
+## MicroPython-level network/BT modules are disabled in mpconfigboard.h.
+CONFIG_ESP_WIFI_ENABLED=y
+CONFIG_LV_FONT_MONTSERRAT_20=y
+CONFIG_LV_FONT_MONTSERRAT_22=y
+CONFIG_LV_FONT_MONTSERRAT_24=y
+CONFIG_LV_FONT_MONTSERRAT_26=y
+CONFIG_LV_FONT_MONTSERRAT_28=y
+CONFIG_LV_FONT_MONTSERRAT_30=y
+CONFIG_LV_USE_REFR_DEBUG=n
+
+# LVGL bundled QR encoder. Required by qr_display_screen and the SeedQR transcribe
+# screens: without it LV_USE_QRCODE defaults to 0, so those screens compile the
+# `#if !LV_USE_QRCODE` blank-screen fallback and every QR renders blank on device
+# (while working on the Pi Zero, whose LVGL build enables it).
+CONFIG_LV_USE_QRCODE=y
+CONFIG_LV_USE_TINY_TTF=y
+CONFIG_LV_FONT_FMT_TXT_LARGE=y
+CONFIG_LV_USE_BIDI=y
+CONFIG_LV_USE_ARABIC_PERSIAN_CHARS=y
+CONFIG_LV_TINY_TTF_CACHE_KERNING_CNT=0
+
+CONFIG_BT_ENABLED=n
+CONFIG_BT_NIMBLE_ENABLED=n
+CONFIG_BT_BLUEDROID_ENABLED=n
+CONFIG_LWIP_ENABLE=y
+CONFIG_ESP_NETIF_TCPIP_LWIP=y
+CONFIG_ESP_NETIF_USES_TCPIP_WITH_BSD_API=y
+CONFIG_ESP_ERR_TO_NAME_LOOKUP=n
+
+# Native RIPEMD-160 (mbedtls) — required to LINK the shared bindings/modhashlibext.c
+# ripemd160 type (mbedtls_ripemd160_*), which is compiled into every board via
+# bindings/micropython.cmake. Disabled by default in ESP-IDF's mbedtls.
+CONFIG_MBEDTLS_RIPEMD160_C=y
+
+# ------------------------------------------------------------------------------
+# Stateless Bootloader Handoff Configuration (Phase 15/16)
+# ------------------------------------------------------------------------------
+CONFIG_SPIRAM_MEMTEST=n
+CONFIG_SPIRAM_SPEED_40M=y
+CONFIG_SPIRAM_ALLOW_STACK_EXTERNAL_MEMORY=y
+CONFIG_SPIRAM_USE_MALLOC=y
+CONFIG_ESP_SYSTEM_HW_STACK_GUARD=n
+CONFIG_ESP_INT_WDT=n
+CONFIG_ESP_INT_WDT_CHECK_CPU1=n
+CONFIG_ESP_TASK_WDT_EN=n
+CONFIG_ESP_TASK_WDT_INIT=n
+CONFIG_ESP_TASK_WDT_ENABLE_AT_STARTUP=n
+CONFIG_PARTITION_TABLE_OFFSET=0x10000
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=16384
+CONFIG_ESP_SYSTEM_SINGLE_CORE_MODE=y
+CONFIG_FREERTOS_UNICORE=y
+CONFIG_ESP_CONSOLE_UART=y
+CONFIG_ESP_CONSOLE_UART_DEFAULT=y
+CONFIG_ESP_CONSOLE_UART_BAUDRATE=115200
+CONFIG_ESP32S3_INSTRUCTION_CACHE_SIZE=0x4000
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions-16MiB-waveshare.csv"
+CONFIG_PARTITION_TABLE_FILENAME="partitions-16MiB-waveshare.csv"

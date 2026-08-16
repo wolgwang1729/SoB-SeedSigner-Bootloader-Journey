@@ -1,0 +1,83 @@
+CONFIG_IDF_TARGET="esp32s3"
+# Secure Boot V2 RSA bootloader exceeds 32KB, so the partition table must sit
+# past the 64KB bootloader area (default 0x8000 is too tight).
+CONFIG_PARTITION_TABLE_OFFSET=0x10000
+CONFIG_BOOTLOADER_COMPILER_OPTIMIZATION_SIZE=y
+CONFIG_PARTITION_TABLE_CUSTOM=y
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
+CONFIG_ESPTOOLPY_FLASHSIZE_8MB=y
+CONFIG_ESPTOOLPY_FLASHSIZE="8MB"
+CONFIG_FREERTOS_UNICORE=y
+CONFIG_ESP_SYSTEM_SINGLE_CORE_MODE=y
+
+# 16KB I-cache — MUST match the payload's CONFIG_ESP32S3_INSTRUCTION_CACHE_SIZE
+# (hello_world_esp32s3_stock_shim uses 0x4000). With 16KB ICACHE the Level-1 IRAM
+# window (0x40374000-0x40378000) is real SRAM instead of cache, which is where the
+# payload's IRAM segments land. The loader's own 2nd-stage bootloader must agree
+# too, so the cache is configured before either image is mapped.
+CONFIG_ESP32S3_INSTRUCTION_CACHE_SIZE=0x4000
+
+# Pin the internal static DRAM: dram0_0_seg = [0x3FC88000, 0x3FCC8000) and
+# _heap_start = 0x3FCC8000 == the JMP zone's D-alias end (0x403B8000 - 0x6F0000).
+# This makes the internal heap start exactly above the JMP zone's physical
+# footprint, so the heap can never claim the memory the JMP trampoline executes
+# from. The complementary guarantee (loader .data/.bss end < 0x3FCB0000) is
+# ASSERTed in main/ld/loader_high.ld.
+CONFIG_ESP32S3_USE_FIXED_STATIC_RAM_SIZE=y
+CONFIG_ESP32S3_FIXED_STATIC_RAM_SIZE=0x40000
+
+# Secure Boot V2 — the 2nd-stage bootloader verifies the app loader
+# (seedsigner_secure_loader.bin) against the eFuse-stored key digest on every
+# boot, so a malicious or wrong loader image in flash is rejected before it can
+# run. The loader itself then verifies the SD-card payload via secp256k1
+# multisig. (Same scheme as Phase 9.)
+CONFIG_SECURE_BOOT=y
+CONFIG_SECURE_BOOT_V2_ENABLED=y
+CONFIG_SECURE_BOOT_SUPPORTS_RSA=y
+CONFIG_SECURE_SIGNED_ON_BOOT=y
+# 'n' means we DO require RSA signatures (double negative)
+CONFIG_SECURE_SIGNED_APPS_NO_RSA_SIGN=n
+CONFIG_SECURE_BOOT_SIGNING_KEY="secure_boot_signing_key.pem"
+CONFIG_SECURE_SIGNED_APPS_RSA_SCHEME=y
+CONFIG_SECURE_SIGNED_APPS_ECDSA_SCHEME=n
+
+# FatFs: long filename support — the payload bundle is seedsigner_esp32s3.bin
+# (22 chars, > 8.3). The FatFs default (LFN_NONE) matches short names only, so
+# the SD read would fail with "Firmware file ... not found" despite a good mount.
+CONFIG_FATFS_LFN_HEAP=y
+
+# eFuses: simulate all reads/writes in RAM — no physical eFuse is ever burned.
+# Safe dev mode for experimenting with secure-boot/flash-encryption provisioning
+# on real silicon.
+# KEEP_IN_FLASH persists the virtual state across reboots in the 'efuse' data
+# partition (same setup as Phase 9).
+CONFIG_EFUSE_VIRTUAL=y
+CONFIG_EFUSE_VIRTUAL_KEEP_IN_FLASH=y
+CONFIG_EFUSE_VIRTUAL_LOG_ALL_WRITES=y
+
+# PSRAM support (ESP32-S3-DEV-KIT-N8R8: WROOM-1-N8R8 module = 8MB OCTAL PSRAM).
+# Runs at 40MHz, NOT the default 80MHz: on this unit 80MHz is signal-marginal
+# (PSRAM ID read errors -> "MSPI Timing tuning fail" -> RTCWDT_RTC_RST boot
+# loop). 40MHz is stable (vendor 0x0d AP).
+CONFIG_SPIRAM=y
+CONFIG_SPIRAM_MODE_OCT=y
+CONFIG_SPIRAM_SPEED_40M=y
+
+# S3 PMS memory protection (memprot) is DISABLED. It was the root cause of the
+# "dead IRAM0 window" (2026-08-15): with the feature ON, cpu_start pins the
+# IRAM0 split line to `_iram_text_end` and sets IRAM0_0/1/2 = READ|EXEC (writes
+# silently dropped) and IRAM0_3 = NONE (I-fetch returns zeros -> IllegalInstruction)
+# for everything above the loader's text. The JMP zone (0x403A0000) sits in that
+# NONE area and the deferred payload copies need WRITE. Attempting to relax the
+# registers from the app hangs the CPU (effective writes are rejected once set;
+# no-change writes pass) even with the software lock bit clear — the constrains
+# are effectively set-once. With the feature OFF the registers stay at their
+# reset default (0x1FFFFF = all R|W|X), so the whole IRAM0 window works.
+# The loader does not rely on memprot for its security chain (Secure Boot V2 +
+# secp256k1-multisig payload verification + JMP-zone teardown); it only armed
+# the S3's accidental-write guard. Re-enable only if a config with writable IRAM0
+# is found.
+#CONFIG_ESP_SYSTEM_MEMPROT_FEATURE is not set
+
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=16384
+CONFIG_COMPILER_OPTIMIZATION_SIZE=y

@@ -1,0 +1,11 @@
+# Name,     Type,  Subtype,  Offset,    Size,    Flags
+# ptable @0x10000 (Secure Boot V2 RSA bootloader needs > 32KB), no otadata —
+# the loader is a single factory app (no OTA). App partitions are 64KB-aligned.
+nvs,        data,  0x99,     0x11000,   0x6000,
+phy_init,   data,  phy,      0x17000,   0x1000,
+efuse,      data,  0x05,     0x18000,   0x2000,
+factory,    app,   factory,  0x20000,   0x200000,
+# payload = dev/bring-up raw 0xE9 image flashed to flash (Phase 11 style), used
+# when no SD card is present; the production SD path is unchanged.
+payload,    data,  0xFF,     0x220000,  0x300000,
+random_fill,data,  0x06,     0x520000,  0x2E0000,

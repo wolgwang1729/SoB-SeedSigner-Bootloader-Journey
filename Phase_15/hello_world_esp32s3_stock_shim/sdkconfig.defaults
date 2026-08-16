@@ -1,0 +1,12 @@
+# ESP32-S3 payload for the Phase 15 stateless loader.
+#
+# Deliberately NO CONFIG_SPIRAM: the loader stages the payload's .text/.rodata
+# in PSRAM-backed "fake_flash" and MMU-remaps the IROM/DROM windows to it, so
+# the app never needs its own PSRAM heap. Keeping SPIRAM off also means the
+# `add_psram_to_heap` system-init-fn sees a freshly-zeroed
+# `esp_psram_is_initialized()` flag and never hands those alias pages to the
+# heap (which would let malloc clobber the running .text/.rodata).
+CONFIG_IDF_TARGET="esp32s3"
+CONFIG_FREERTOS_UNICORE=y
+CONFIG_ESP_SYSTEM_SINGLE_CORE_MODE=y
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=8192

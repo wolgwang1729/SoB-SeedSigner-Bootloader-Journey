@@ -127,6 +127,8 @@ Phase 17 uses a contiguous row of pins on the bottom strip of the ESP32-S3 DevKi
 | **`GPIO 10`** (Pin 7) | `MOSI` (Host → Card) | `CMD` | **Pin 4 (`MOSI`)** |
 | **`GPIO 9`** (Pin 8) | `MISO` (Card → Host) | `D0` | **Pin 3 (`MISO`)** |
 
+![ESP32-S3 to HW-125 MicroSD Module Circuit Diagram](./circuit_diagram_esp32s3.jpg)
+
 ### 4.3 Dual SDSPI / SDMMC Host Engine & Linker Memory Expansion
 - **HW-125 Buffered Adapter Support:** Many off-the-shelf microSD modules (like HW-125) feature an onboard 74LVC125A quad level shifter that buffers `MOSI` unidirectionally into the card's `CMD` pin. In native SDMMC 1-bit mode, the bidirectional `CMD` line response is blocked. Phase 17 implements an automated **SDSPI Host (`SPI2_HOST`)** probe first with internal pull-ups (`gpio_set_pull_mode`) and 4MHz calibrated clock, falling back seamlessly to native SDMMC.
 - **Linker IRAM Expansion (`loader_high.ld`):** To accommodate both the full SDSPI host driver, SPI DMA drivers, and crypto libraries without overflowing `iram0_0_seg`, the loader linker memory script expands `iram0_0_seg` from `0xD400` to `0x20000` (128 KB), maintaining safe headroom before the JMP zone at `0x403A0000`.
@@ -283,6 +285,7 @@ Type "help()" for more information.
 ## 10. Artifacts
 
 - `Phase_17/Phase_17_ESP32S3_SDCard_Stateless_Boot.md` — this phase write-up
+- `Phase_17/circuit_diagram_esp32s3.jpg` — ESP32-S3 to MicroSD module breadboard circuit wiring diagram
 - `Phase_17/seedsigner_bootloader_esp32s3_stateless_os/` — complete ESP32-S3 pure SD card stateless secure bootloader project (partitions, main orchestrator, anti-phishing flash fill, JMP trampoline linker script, virtual-eFuse run script, pytest suite)
 - `Phase_17/build_micropython.sh` — S3 MicroPython Specter bundle signing script
 - `Phase_17/build_payload.sh` — S3 hello-world shim payload build and Specter signing script
